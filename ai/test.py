@@ -11,7 +11,7 @@ def iterate(List):
             _l.append(iterate(x))
     return _l
 
-print(iterate(l))
-
+a = [3, 3]
+print(max(a))
 
 

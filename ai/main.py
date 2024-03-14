@@ -1,6 +1,9 @@
 import chess
 from chess import Termination
 
+inf = float('inf')
+neg_inf = float('-inf')
+
 b = chess.Board('rnbqkbn1/ppppppp1/7r/7p/4P3/8/PPPPKPPP/RNBQ1BNR w q - 2 3')
 print([str(x) for x in b.legal_moves])
 print(b.outcome())
@@ -33,9 +36,9 @@ class chess_ai():
             eval = 0.0
         elif outcome.termination == Termination.CHECKMATE:
             if outcome.winner == True:
-                eval = 0.5
+                eval = inf
             if outcome.winner == False:
-                eval = -0.5
+                eval = neg_inf
         return eval
 
 
@@ -56,43 +59,72 @@ class chess_ai():
         pass
 
 
-    def _fill_moves(self, tree, depth):
+    def _fill_moves(self, tree, depth, cur_depth=0):
         _l = list()
+        if cur_depth == depth:
+            return tree
         for i, x in enumerate(tree):
             print(x)
             if not isinstance(x, list):
-                _l.append(f'Zahl: {x}')
+                b = chess.Board(tree[1])
+                b.push_san(tree[0])
+                fen = b.fen()
+                moves = [[str(x), fen, 0, []] for x in b.legal_moves]
+                tree[3] = self._fill_moves(moves, depth, cur_depth+1)
+                return tree
             else:
-                _l.append(self._fill_moves(x, depth))
+                _l.append(self._fill_moves(x, depth, cur_depth+1))
         return _l
 
     def minmax(self ,List, maxPlayer: bool = True):
-
-        if not isinstance(List, list):
-            return List
+        if len(List)>3:
+            if List[3] == []:
+                b = chess.Board(List[1])
+                b.push_san(List[0])
+                fen = b.fen()
+                List[1] = fen
+                List[2] = self._eval(fen)
+                return List
 
         if maxPlayer:
             eval = list()
-            for x in List:
-                eval.append(self.minmax(x, False))
-            return max(eval)
+            if isinstance(List[0], str):
+                eval = self.minmax(List[3], True)
+                _l = [xx for xx in List]
+                _l[-1] = eval
+                _l[2] = eval[2]
+                eval = _l
+            else:
+                for x in List:
+                    eval.append(self.minmax(x, False))
+                eval = max(eval, key=lambda x: x[2])
+            return eval
 
         else:
             eval = list()
-            for x in List:
-                eval.append(self.minmax(x, True))
-            return min(eval)
+            if isinstance(List[0], str):
+                eval = self.minmax(List[3], False)
+                _l = [xx for xx in List]
+                _l[-1] = eval
+                _l[2] = eval[2]
+                eval = _l
+            else:
+                for x in List:
+                    eval.append(self.minmax(x, True))
+                eval = min(eval, key=lambda x: x[2])
+            return eval
 
-    def start(self, fen:str, depth:int=5):
+    def start(self, fen:str, depth:int=5, player:bool=True): #true is white
         depth = depth * 2
         tree = [[str(x), fen, 0, []] for x in chess.Board(fen).legal_moves]
         self._fill_moves(tree, depth)
-        print(depth)
+        eval = self.minmax(tree, player)
         print(tree)
+        print(eval)
 
-f = '8/8/5k1K/8/8/8/8/6r1 b - - 27 48'
+f = '3rr1k1/2p1q2p/2b1P1pb/Np3p2/3B1P1P/1PP3P1/4Q3/2KRR3 b - - 0 32'
 c = chess_ai(f)
-c.start(f, 1)
+c.start(f, 2, False)
 
 
 
