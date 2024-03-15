@@ -122,9 +122,51 @@ class chess_ai():
         print(tree)
         print(eval)
 
-f = '3rr1k1/2p1q2p/2b1P1pb/Np3p2/3B1P1P/1PP3P1/4Q3/2KRR3 b - - 0 32'
+    def create_move_list(self, fen):
+        tree = [[str(x), fen, 0, []] for x in chess.Board(fen).legal_moves]
+        return tree
+
+    def better_minmax(self, List, max_depth, depth=0, maxPlayer: bool = True, best_eval=None):
+        print(List)
+        if not isinstance(List[0], list):
+            b = chess.Board(List[1])
+            b.push_san(List[0])
+            fen = b.fen()
+            List[1] = fen
+            del b
+            if depth == max_depth:
+                List[2] = self._eval(fen)
+                return List
+            else:
+                List[3] = self.create_move_list(fen)
+                if List[3] == []:
+                    List[2] = self._eval(fen)
+
+        if maxPlayer:
+            r = list()
+            if isinstance(List[0], list):
+                for x in List:
+                    r.append(self.better_minmax(x, max_depth, depth + 1, True, None))
+                return r
+            else:
+                for x in List[3]:
+                    r.append(self.better_minmax(x, max_depth, depth+1, True, None))
+                best = max(r, key=lambda x: x[2])
+                List[3] = best
+                List[2] = best
+                return List
+        else:
+            pass
+
+    def better_start(self, fen:str, depth:int, player:bool):
+        depth = depth * 2 + 1
+        tree = self.create_move_list(fen)
+        print(tree)
+        print(self.better_minmax(tree, 2))
+
+f = '5R2/8/5K1k/8/8/8/8/8 w - - 0 1'
 c = chess_ai(f)
-c.start(f, 2, False)
+c.better_start(f, 2, False)
 
 
 
