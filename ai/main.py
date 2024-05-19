@@ -127,8 +127,7 @@ class chess_ai():
         return tree
 
     def better_minmax(self, List, max_depth, depth=0, maxPlayer: bool = True, best_eval=None):
-        print(List)
-        if not isinstance(List[0], list):
+        if not isinstance(List[0], list) and not List[0]=='':
             b = chess.Board(List[1])
             b.push_san(List[0])
             fen = b.fen()
@@ -141,32 +140,52 @@ class chess_ai():
                 List[3] = self.create_move_list(fen)
                 if List[3] == []:
                     List[2] = self._eval(fen)
+                    return List
 
         if maxPlayer:
             r = list()
-            if isinstance(List[0], list):
-                for x in List:
-                    r.append(self.better_minmax(x, max_depth, depth + 1, True, None))
-                return r
-            else:
-                for x in List[3]:
-                    r.append(self.better_minmax(x, max_depth, depth+1, True, None))
-                best = max(r, key=lambda x: x[2])
-                List[3] = best
-                List[2] = best
-                return List
+            for x in List[3]:
+                pas_eval = None
+                if r != []:
+                    r = [max(r, key=lambda x: x[2])]
+                    pas_eval = r[0][2]
+                    if best_eval is not None:
+                        if pas_eval > best_eval:
+                            print('Eingespart')
+                            return r[0]
+                r.append(self.better_minmax(x, max_depth, depth + 1, False, pas_eval))
+            best = max(r, key=lambda x: x[2])
+            List[3] = best
+            List[2] = best[2]
+            return List
         else:
-            pass
+            r = list()
+            for x in List[3]:
+                pas_eval = None
+                if r != []:
+                    r = [min(r, key=lambda x: x[2])]
+                    pas_eval = r[0][2]
+                    if best_eval is not None:
+                        if pas_eval < best_eval:
+                            print('Eingespart')
+                            return r[0]
+                r.append(self.better_minmax(x, max_depth, depth + 1, True, pas_eval))
+            best = min(r, key=lambda x: x[2])
+            List[3] = best
+            List[2] = best[2]
+            return List
 
     def better_start(self, fen:str, depth:int, player:bool):
         depth = depth * 2 + 1
-        tree = self.create_move_list(fen)
+        tree = ['', fen, 0, self.create_move_list(fen)]
         print(tree)
-        print(self.better_minmax(tree, 2))
+        print(self.better_minmax(tree, 5))
 
-f = '5R2/8/5K1k/8/8/8/8/8 w - - 0 1'
-c = chess_ai(f)
-c.better_start(f, 2, False)
+r = '8/3q2k1/p3R1p1/1p1n3r/5p2/PPPQ2p1/6B1/6K1 w - - 2 44'
+m2 = 'Q2r4/1pk2pp1/2pbp2p/4n2P/1P6/1BPqB3/P4PP1/5NK1 w - - 1 29'
+m1 = '5R2/8/5K1k/8/8/8/8/8 w - - 0 1'
+c = chess_ai(m1)
+c.better_start(r, 3, False)
 
 
 
