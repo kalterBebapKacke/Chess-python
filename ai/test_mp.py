@@ -15,7 +15,7 @@ def test1(c):
     time.sleep(7)
 
 def test2(c):
-    c.add(test='1')
+    c.add(test2777='1')
     print(c.get('test'))
     print(c.keys)
     print(c.value)
@@ -29,15 +29,12 @@ def test4(list):
     print(list)
 
 if __name__ == '__main__':
-    mp.set_start_method('forkserver')
-    smm = SharedMemoryManager()
-    smm.start()
-
-    length = 100
-    keys = smm.ShareableList(range(length))
-    value = smm.ShareableList([0 for x in range(length)])
-    c = cach.cache(None, keys, value, length)
+    smm, keys, value, length, _lenght = cach.setup()
+    c = cach.cache(None, keys, value, length, _lenght)
     p1 = mp.Process(target=test2, args=(c,))
     p2 = mp.Process(target=test2, args=(c,))
     p1.start()
     p2.start()
+    p1.join()
+    p2.join()
+    cach.save(keys, value)
