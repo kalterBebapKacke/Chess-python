@@ -2,6 +2,7 @@ import chess
 from chess import Termination
 import time
 import multiprocessing as mp
+import cach
 
 inf = float('inf')
 neg_inf = float('-inf')
@@ -36,11 +37,30 @@ def fill_moves(workload):
         b.push_san(move)
         info.append([move, b.fen(), 0.0, []])
         b.pop()
-    workload[3] = info
+    workload[-1] = info
+    return workload
+
+def mp_fill_moves(workload):
+    fen = workload[1]
+    move_list = workload[0]
+    depth = workload[2] + 1
+    b = chess.Board(fen)
+    moves = [str(x) for x in b.legal_moves]
+    info = list()
+    for move in moves:
+        b.push_san(move)
+        move_list.append(move)
+        info.append([[x for x in move_list], b.fen(), depth, workload[3], 0.0, []])
+        del move_list[-1]
+        b.pop()
+    workload[5] = info
     return workload
 
 def move_first(fen):
     return ['', fen, _eval(fen), []]
+
+def mp_move_first(fen, max_depth):
+    return [[], fen, 0, max_depth, _eval(fen), []]
 
 def player_func(player):
     if player:
@@ -129,7 +149,41 @@ def start(fen, depth, process=8):
             'eval' : res[2],
             'time' : end - start,
             'fen'  : fen,
-            'depth': depth}
+            'depth': depth,}
+
+def mp_min_max(workload, cache):
+    #if cache.get(workload[1]) != []:
+
+    workload = mp_fill_moves(workload)
+    if workload[2] == workload[3] or workload[-1] == []:
+        workload[4] = _eval(workload[1])
+        workload[-1] = []
+        return [None, workload]
+    return [workload[-1], None]
+
+
+
+def mp_controller(fen, max_depth=2, process=4):
+    workload = mp_move_first(fen, max_depth)
+    workload = mp_fill_moves(workload)
+    _queue = workload[-1]
+    smm, keys, value, length, _lenght = cach.setup()
+    c = cach.cache(None, keys, value, length, _lenght)
+    result = list()
+    with mp.Pool(process) as pool:
+        while _queue != []:
+            print(_queue)
+            args = [[_queue[x], c] for x in range(len(_queue))]
+            res = pool.starmap(mp_min_max, args)
+            _queue.clear()
+            for x in res:
+                if x[0] == None:
+                    result.append(x[1])
+                else:
+                    _queue.append(x[0])
+    print(result)
+
+
 
 
 
@@ -148,6 +202,8 @@ print(workload)
 print(fill_moves(workload))
 
 if __name__ == '__main__':
-    workload = move_first(fen4)
-    print(start(fen4, 3, process=16))
+    workload = mp_move_first(fen4, 2)
+    print(mp_fill_moves(workload))
+    mp_controller(fen, 2, 5)
+    #print(start(fen4, 3, process=16))
 

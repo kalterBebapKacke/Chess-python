@@ -28,7 +28,8 @@ def test4(list):
     time.sleep(3)
     print(list)
 
-if __name__ == '__main__':
+if __name__ == '__main__1':
+    from multiprocessing import Process, Pipe
     smm, keys, value, length, _lenght = cach.setup()
     c = cach.cache(None, keys, value, length, _lenght)
     p1 = mp.Process(target=test2, args=(c,))
@@ -38,3 +39,11 @@ if __name__ == '__main__':
     p1.join()
     p2.join()
     cach.save(keys, value)
+
+if __name__ == '__main__':
+    a = [x for x in range(5)]
+    a1 = [x for x in range(5)]
+    a1.clear()
+    print(a1)
+    a.extend(a1)
+    print(a)
