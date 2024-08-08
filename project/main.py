@@ -6,6 +6,8 @@ import chess.pgn
 import io
 load_dotenv()
 
+# https://github.com/lichess-org/stockfish.js
+
 class Player_Chess():
 
     def __init__(self, player_id, sql=None):
