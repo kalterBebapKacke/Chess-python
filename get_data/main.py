@@ -95,6 +95,10 @@ if __name__ == "__main__":
     fen2 = '8/8/8/8/8/1k6/7q/K7 b - - 0 1'
     fen3 = '8/8/8/8/8/1K6/7Q/k7 w - - 0 1'
     #print(get_eval([fen2]))
-    main(2)
+    for x in range(5):
+        try:
+            main(10)
+        except Exception as e:
+            print(e)
 
 
